@@ -1,126 +1,133 @@
-// class TaskList {
-//   constructor() {
-//     this.titleInput = document.getElementById("messageTitle");
-//     this.editTitleInput = document.getElementById("editMessageTitle");
-//     this.messageInput = document.getElementById("messageBody");
-//     this.editMessageInput = document.getElementById("editMessageBody");
-//     this.addBtn = document.getElementById("addButton");
-//     this.btnSaveEdit = document.getElementById("saveEdit");
-//     this.scrapsField = document.getElementById("scrapsField");
+import api from "./services/api";
 
-//     this.scraps = [];
+class TaskList {
+  constructor() {
+    this.titleInput = document.getElementById("messageTitle");
+    this.editTitleInput = document.getElementById("editMessageTitle");
+    this.messageInput = document.getElementById("messageBody");
+    this.editMessageInput = document.getElementById("editMessageBody");
+    this.addBtn = document.getElementById("addButton");
+    this.btnSaveEdit = document.getElementById("saveEdit");
+    this.scrapsField = document.getElementById("scrapsField");
 
-//     this.registerAddScrapBtnEvent();
-//   }
+    this.scraps = [];
 
-//   generateScrapId() {
-//     return this.scraps.length + 1;
-//   }
+    this.getScraps();
 
-//   registerAddScrapBtnEvent() {
-//     this.addBtn.onclick = () => this.addNewScrap();
-//   }
+    this.registerAddScrapBtnEvent();
+  }
 
-//   setButtonEvents() {
-//     document.querySelectorAll(".delete-button").forEach((item) => {
-//       item.onclick = (event) => this.deleteScrap(event);
-//     });
+  async getScraps() {
+    const { data:scraps } = await api.get("/scrapbook");
 
-//     document.querySelectorAll(".edit-button").forEach((item) => {
-//       item.onclick = (event) => this.openEditModal(event);
-//     });
-//   }
+    this.scraps = scraps;
+    this.renderScraps();
+  }
 
-//   renderScraps() {
-//     this.scrapsField.innerHTML = "";
+  registerAddScrapBtnEvent() {
+    this.addBtn.onclick = () => this.addNewScrap();
+  }
 
-//     for (const scrap of this.scraps) {
-//       const cardHtml = this.createScrapCard(
-//         scrap.id,
-//         scrap.title,
-//         scrap.message
-//       );
+  setButtonEvents() {
+    document.querySelectorAll(".delete-button").forEach((item) => {
+      item.onclick = (event) => this.deleteScrap(event);
+    });
 
-//       this.insertHtml(cardHtml);
-//     }
+    document.querySelectorAll(".edit-button").forEach((item) => {
+      item.onclick = (event) => this.openEditModal(event);
+    });
+  }
 
-//     this.setButtonEvents();
-//   }
+  renderScraps() {
+    this.scrapsField.innerHTML = "";
 
-//   addNewScrap() {
-//     const id = this.generateScrapId();
-//     const title = this.titleInput.value;
-//     const message = this.messageInput.value;
+    for (const scrap of this.scraps) {
+      const cardHtml = this.createScrapCard(
+        scrap.id,
+        scrap.title,
+        scrap.message
+      );
 
-//     this.titleInput.value = "";
-//     this.messageInput.value = "";
+      this.insertHtml(cardHtml);
+    }
 
-//     this.scraps.push({ id, title, message });
+    this.setButtonEvents();
+  }
 
-//     this.renderScraps();
-//   }
+  addNewScrap() {
+    const newTitle = this.titleInput.value;
+    const newMessage = this.messageInput.value;
 
-//   deleteScrap(event) {
-//     event.path[2].remove();
+    this.titleInput.value = "";
+    this.messageInput.value = "";
 
-//     const scrapId = event.path[2].getAttribute("id-scrap");
+    const { 
+      data: {id, title, message} 
+    } = await api.post("/scraps", {title: newTitle, message: newMessage});
 
-//     const scrapIndex = this.scraps.findIndex((item) => {
-//       return item.id == scrapId;
-//     });
+    this.scraps.push({ id, title, message });
 
-//     this.scraps.splice(scrapIndex, 1);
-//   }
+    this.renderScraps();
+  }
 
-//   insertHtml(html) {
-//     this.scrapsField.innerHTML += html;
-//   }
+  deleteScrap(event) {
+    event.path[2].remove();
 
-//   openEditModal(event) {
-//     $("#editModal").modal("toggle");
+    const scrapId = event.path[2].getAttribute("id-scrap");
 
-//     const scrapId = event.path[2].getAttribute("id-scrap");
+    const scrapIndex = this.scraps.findIndex((item) => {
+      return item.id == scrapId;
+    });
 
-//     const scrapIndex = this.scraps.findIndex((item) => {
-//       return item.id == scrapId;
-//     });
+    this.scraps.splice(scrapIndex, 1);
+  }
 
-//     this.editTitleInput.value = this.scraps[scrapIndex].title;
-//     this.editMessageInput.value = this.scraps[scrapIndex].message;
+  insertHtml(html) {
+    this.scrapsField.innerHTML += html;
+  }
 
-//     this.btnSaveEdit.onclick = () => this.saveChanges(scrapIndex);
-//   }
+  openEditModal(event) {
+    $("#editModal").modal("toggle");
 
-//   saveChanges(scrapIndex) {
-//     let title = this.editTitleInput.value;
-//     let message = this.editMessageInput.value;
+    const scrapId = event.path[2].getAttribute("id-scrap");
 
-//     this.scraps[scrapIndex] = { title, message };
-//     this.renderScraps();
-//     $("#editModal").modal("hide");
-//   }
+    const scrapIndex = this.scraps.findIndex((item) => {
+      return item.id == scrapId;
+    });
 
-//   createScrapCard(id, title, message) {
-//     return `
-//     <div class="message-cards card text-white bg-dark m-2 col-3" id-scrap="${id}">
-//       <div class="card-header font-weight-bold">${title}</div>
-//       <div class="card-body">
-//         <p class="card-text">
-//           ${message}
-//         </p>
-//       </div>
-//       <div class="w-100 d-flex justify-content-end pr-2 pb-2">
-//         <button class="btn btn-danger mr-1 delete-button">Deletar</button>
-//         <button class="btn btn-info edit-button">Editar</button>
-//       </div>
-//     </div>
-//     `;
-//   }
-// }
+    this.editTitleInput.value = this.scraps[scrapIndex].title;
+    this.editMessageInput.value = this.scraps[scrapIndex].message;
 
-// new TaskList();
+    this.btnSaveEdit.onclick = () => this.saveChanges(scrapIndex);
+  }
+
+  saveChanges(scrapIndex) {
+    let title = this.editTitleInput.value;
+    let message = this.editMessageInput.value;
+
+    this.scraps[scrapIndex] = { title, message };
+    this.renderScraps();
+    $("#editModal").modal("hide");
+  }
+
+  createScrapCard(id, title, message) {
+    return `
+    <div class="message-cards card text-white bg-dark m-2 col-3" id-scrap="${id}">
+      <div class="card-header font-weight-bold">${title}</div>
+      <div class="card-body">
+        <p class="card-text">
+          ${message}
+        </p>
+      </div>
+      <div class="w-100 d-flex justify-content-end pr-2 pb-2">
+        <button class="btn btn-danger mr-1 delete-button">Deletar</button>
+        <button class="btn btn-info edit-button">Editar</button>
+      </div>
+    </div>
+    `;
+  }
+}
+
+new TaskList();
 
 
-import { soma } from './soma';
-
-alert(soma(10, 4));
