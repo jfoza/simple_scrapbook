@@ -15,7 +15,8 @@
     "webpack-dev-server": "^3.11.0"
   },
   "scripts": {
-    "dev": "webpack-dev-server --node development"
+    "dev": "webpack-dev-server --node development",
+    "build": "webpack --node production"
   },
   "dependencies": {
     "axios": "^0.19.2",
