@@ -18,7 +18,7 @@ class TaskList {
   }
 
   async getScraps() {
-    const { data:scraps } = await api.get("/scrapbook");
+    const { data:scraps } = await api.get("/scraps");
 
     this.scraps = scraps;
     this.renderScraps();
